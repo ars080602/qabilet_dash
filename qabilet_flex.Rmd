@@ -1,0 +1,179 @@
+---
+title: "Дашборд"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    #css: styles.css
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard) 
+library(plotly)
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(stringr)
+library(gt)
+library(htmltools)
+library(highcharter)
+library(viridis)
+
+df_1 <- read.csv('/Users/market/Desktop/Work/qabilet_project/data_in_process/df_1.csv') 
+
+#rmarkdown::render('/Users/market/Desktop/Work/qabilet_project/qabilet_flex.Rmd')
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+#средние показатели по тестам
+
+data <- df_1 %>%
+  group_by(residence) %>% 
+  na.omit() %>% 
+  summarise(crit_mean = mean(crit_think), 
+            creativ_mean = mean(creativ),
+            communic_mean = mean(communic),
+            collab_mean = mean(collabor),
+            result_mean = mean(result), 
+            time_mean = mean(duration)) %>% 
+  mutate(across(crit_mean:time_mean, ~round(., 2)))
+
+custom_colors <- viridis::mako(n = 4)
+
+highchart() %>%
+  hc_chart(type = 'column') %>%
+  hc_title(text = 'Средние баллы по секциям') %>%
+  hc_xAxis(categories = data$residence) %>%
+  hc_yAxis(title = list(text = 'Значения')) %>%
+  hc_add_series(name = 'Критическое мышление', data = data$crit_mean, color = custom_colors[1]) %>%
+  hc_add_series(name = 'Креативность', data = data$creativ_mean, color = custom_colors[2]) %>%
+  hc_add_series(name = 'Коммуникации', data = data$communic_mean, color = custom_colors[3]) %>%
+  hc_add_series(name = 'Коллаборации', data = data$collab_mean, color = custom_colors[4]) %>%
+  hc_tooltip(shared = TRUE)
+  #hc_add_theme(hc_theme_darkunica())
+
+
+
+
+```
+
+Column {data-width=325}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+custom_colors <- viridis::mako(n = 7)
+
+df_1 %>% 
+  group_by(age) %>% 
+  summarise(count = n()) %>% 
+  hchart('pie', hcaes(name = age, y = count, color = custom_colors)) %>% 
+  hc_add_theme(hc_theme_google()) %>% 
+  hc_tooltip(pointFormat = '<b>Proportion: </b> {point.percentage:,.2f}%') %>% 
+  hc_title(text = 'Распределение возрастов участников',
+           style = list(fontSize = '15px')) %>% 
+  hc_credits(enabled = F)
+
+
+
+```
+
+### Chart C
+
+```{r}
+
+custom_colors <- viridis::plasma(n = 18)
+
+df_1 %>% 
+  group_by(region) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  hchart('bar', hcaes(x = region, y = count, color = custom_colors)) %>% 
+  hc_add_theme(hc_theme_google()) %>% 
+  hc_tooltip(pointFormat = '<b>Количество участников: </b> {point.y} <br>') %>% 
+  hc_title(text = 'Количество участников',
+           size = list(fontSize = '25px', 
+                       fontWeight = 'bold')) %>% 
+  hc_credits(enabled = F)
+
+```
+
+
+Column {data-width=325}
+-----------------------------------------------------------------------
+
+### Chart D
+
+```{r}
+
+
+valueBox(
+  value = "16 821", 
+  caption = "Количество участников", 
+  icon = "user", 
+  color = "info"
+)
+
+
+
+```
+
+
+### Char E
+
+```{r}
+
+
+valueBox(
+  value = "139.2", 
+  caption = "Средний балл по стране", 
+  icon = "layer_group", 
+  color = "warning"
+)
+
+
+
+```
+
+### Char в
+
+```{r}
+
+
+valueBox(
+  value = "29 м 3 с", 
+  caption = "Среднее время выполнения теста", 
+  icon = "check", 
+  color = "primary"
+)
+
+
+```
+
+
+### Chart F
+
+``` {r}
+
+custom_colors <- viridis::mako(n = 18)
+
+df_1 %>% 
+  group_by(region) %>% 
+  summarise(count = round(mean(result), 2)) %>% 
+  arrange(desc(count)) %>% 
+  hchart('column', hcaes(x = region, y = count, color = custom_colors)) %>% 
+  hc_add_theme(hc_theme_google()) %>% 
+  hc_tooltip(pointFormat = '<b>Средний балл: </b> {point.y} <br>') %>% 
+  hc_title(text = 'Средний балл',
+           size = list(fontSize = '25px')) %>% 
+  hc_credits(enabled = F)
+
+```
